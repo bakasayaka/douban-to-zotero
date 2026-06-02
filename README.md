@@ -4,7 +4,7 @@ Zotero 9 add-on for importing books from a Douban wish list into Zotero with par
 
 The current first-version candidate scope is intentionally narrow:
 
-- build a production Zotero 9 `.xpi` with `npm run build`
+- publish a reviewed source package/archive and a production Zotero 9 `.xpi`; `npm run build` creates the `.xpi`
 - import Douban UID-based wish lists through the Tools menu
 - parse Douban book metadata with deterministic rules and public synthetic fixture coverage
 - block normal imports that miss the minimum metadata gate: title, author/editor, date, publisher, and language
@@ -19,7 +19,7 @@ Out of first-version scope:
 - unreviewed bulk import of OpenAI-cleaned metadata
 - CI/firewall-level network blocking for dry-run tests
 
-## Build
+## Build And Release Artifacts
 
 ```powershell
 npm install
@@ -31,13 +31,15 @@ npm run smoke:ui:dry
 npm run build
 ```
 
-The production add-on is written to:
+The production add-on package is written to:
 
 ```text
 build/doubantozoter-0.1.0.xpi
 ```
 
 The manifest targets Zotero `9.0` through `9.*`.
+
+For a public release, publish both the reviewed source version/archive and the generated `.xpi`. The source package is the auditable code artifact; the `.xpi` is the installable Zotero add-on package.
 
 ## Install For Testing
 

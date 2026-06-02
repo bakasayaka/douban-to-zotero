@@ -29,8 +29,6 @@ const clearLocalDataDialog = readText("src", "modules", "ui", "clear-local-data-
 const localData = readText("src", "modules", "local-data.ts");
 const diagnostics = readText("src", "modules", "diagnostics.ts");
 const preferences = readText("src", "modules", "preferences.ts");
-const seriesDialog = readText("src", "modules", "ui", "series-dialog.ts");
-const seriesDialogXhtml = readText("addon", "content", "series-dialog.xhtml");
 const readlistsDialogXhtml = readText("addon", "content", "readlists-dialog.xhtml");
 const openaiSettingsDialogXhtml = readText("addon", "content", "openai-settings-dialog.xhtml");
 const diagnosticsDialogXhtml = readText("addon", "content", "diagnostics-dialog.xhtml");
@@ -61,6 +59,7 @@ const openaiComparisonImportScript = readText("scripts", "pipeline", "import-ope
 const openaiPromotionScript = readText("scripts", "pipeline", "promote-openai-cleaned-records.ts");
 const readlistNormalizationReplayScript = readText("scripts", "pipeline", "replay-readlist-normalization-to-db.ts");
 const openaiCleaningClient = readText("src", "modules", "openai-compatible-client.ts");
+const buildScript = readText("scripts", "build.mjs");
 const rootReadme = readText("README.md");
 const gitignoreText = readText(".gitignore");
 const packageJson = JSON.parse(readText("package.json"));
@@ -133,9 +132,16 @@ const checks = {
   zotero9ManifestBaseline: addonManifest.applications?.zotero?.strict_min_version === "9.0" &&
     addonManifest.applications?.zotero?.strict_max_version === "9.*",
   incompleteImportDisabled: syncDialog.includes("validateMinimumBookIngest") && syncDialog.includes("checkbox.disabled = true"),
-  seriesDialogIngestGuard: seriesDialog.includes("validateMinimumBookIngest") && seriesDialog.includes("Incomplete metadata"),
-  seriesManualDateField: seriesDialogXhtml.includes("manual-publish-date"),
-  seriesManualLanguageField: seriesDialogXhtml.includes("manual-language"),
+  mvpBNoSeriesMenuItem: !hooks.includes("showSeriesDialog") &&
+    !hooks.includes("douban-to-zotero-series") &&
+    !hooks.includes("Batch Import Volumes") &&
+    !indexTs.includes("SeriesDialogUI"),
+  mvpBProductionBuildExcludesSeriesAssets: buildScript.includes("FIRST_VERSION_EXCLUDED_PRODUCTION_ADDON_FILES") &&
+    buildScript.includes('join("content", "series-dialog.xhtml")') &&
+    buildScript.includes("FIRST_VERSION_EXCLUDED_PRODUCTION_LOCALE_IDS") &&
+    buildScript.includes('"menu-series-import"') &&
+    buildScript.includes("removeFirstVersionProductionResources") &&
+    buildScript.includes("if (!isDev)"),
   writerIngestGuard: writer.includes("validateMinimumBookIngest") && writer.includes("Incomplete metadata"),
   writerPayloadHelper: writer.includes("export async function createZoteroBookItemFromPayload") &&
     writer.includes("payload: ZoteroBookPayload"),
@@ -215,8 +221,11 @@ const checks = {
     !openaiCleaningScript.includes("apiKey: options.apiKey"),
   openaiCleaningKeyRedaction: openaiCleaningClient.includes("redactOpenAICompatibleApiKey") &&
     openaiCleaningClient.includes("OPENAI_COMPATIBLE_REDACTED_API_KEY") &&
+    openaiCleaningClient.includes("redactOpenAICompatibleBaseUrl") &&
+    openaiCleaningScript.includes("normalizeBaseUrl(options.baseUrl)") &&
     openaiCleaningScript.includes("persistenceSafeErrorMessage") &&
-    openaiCleaningScript.includes("redactOpenAICompatibleApiKey(message, apiKey)"),
+    openaiCleaningScript.includes("redactOpenAICompatibleSecrets(message, apiKey)") &&
+    openaiCleaningScript.includes("persistenceSafeBaseUrl"),
   openaiCleaningComparisonScriptEntry: packageJson.scripts["reference:cleaning:compare"] ===
     "node scripts/compare-openai-cleaning-modes.mjs",
   openaiCleaningComparisonLiveGuard: openaiCleaningComparisonScript.includes('DOUBAN_TO_ZOTERO_EXECUTION_MODE !== "live"') &&
@@ -232,7 +241,9 @@ const checks = {
     openaiCleaningComparisonScript.includes('mode === "restricted"') &&
     openaiCleaningComparisonScript.includes("rejectedChangedFields") &&
     openaiCleaningComparisonScript.includes("HIGH_RISK_FIELDS"),
-  openaiCleaningComparisonKeyRedaction: openaiCleaningComparisonScript.includes("redactOpenAICompatibleApiKey") &&
+  openaiCleaningComparisonKeyRedaction: openaiCleaningComparisonScript.includes("normalizeBaseUrl(options.baseUrl)") &&
+    openaiCleaningComparisonScript.includes("redactOpenAICompatibleSecrets") &&
+    openaiCleaningComparisonScript.includes("redactOpenAICompatibleBaseUrl") &&
     openaiCleaningComparisonScript.includes("request-log.json") &&
     !openaiCleaningComparisonScript.includes("apiKey: options") &&
     !openaiCleaningComparisonScript.includes("apiKey: process.env"),

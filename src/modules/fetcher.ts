@@ -164,7 +164,15 @@ function recordCompletenessWarnings(
   uniqueEntryCount: number,
   fetchedPageCount: number,
 ): void {
-  if (totalBooks <= 0) return;
+  if (totalBooks <= 0) {
+    if (uniqueEntryCount > 0) {
+      pushWarningOnce(
+        warnings,
+        "readlist-total-unknown: Douban did not expose a readable wish-list total; completeness could not be verified.",
+      );
+    }
+    return;
+  }
 
   const expectedPageCount = Math.ceil(totalBooks / ITEMS_PER_PAGE);
   if (visibleEntryCount < totalBooks) {
@@ -263,7 +271,16 @@ export async function fetchWishList(
         hasNext: diagnostics.hasNext,
         nextUrl: diagnostics.nextUrl,
       };
-      if (pageIndex === 1) totalBooks = pageInfo.totalBooks;
+      if (pageInfo.totalBooks > 0) {
+        if (totalBooks === 0) {
+          totalBooks = pageInfo.totalBooks;
+        } else if (pageInfo.totalBooks !== totalBooks) {
+          pushWarningOnce(
+            warnings,
+            `readlist-total-changed: Douban wish-list total changed from ${totalBooks} to ${pageInfo.totalBooks} during pagination.`,
+          );
+        }
+      }
 
       const links = diagnostics.links;
       visibleEntryCount += links.length;
@@ -281,7 +298,7 @@ export async function fetchWishList(
         `Fetched ${allLinks.length}/${totalBooks || "?"} list entries.`,
       );
 
-      if (totalBooks > 0 && visibleEntryCount >= totalBooks) break;
+      if (totalBooks > 0 && allLinks.length >= totalBooks) break;
       if (!pageInfo.hasNext) break;
       pageUrl = pageInfo.nextUrl ?? `${WISH_LIST_BASE}/${uid}/wish?start=${pageIndex * ITEMS_PER_PAGE}`;
       pageIndex++;

@@ -8,7 +8,9 @@ import type { ValidationStatus } from "../../src/types/pipeline";
 import {
   ModelHttpError,
   ModelRateLimitError,
-  redactOpenAICompatibleApiKey,
+  normalizeBaseUrl,
+  redactOpenAICompatibleBaseUrl,
+  redactOpenAICompatibleSecrets,
 } from "../../src/modules/openai-compatible-client";
 import { FetchOpenAICompatibleTransport } from "../../src/modules/openai-compatible-transport";
 import { parseBookDetailWithDiagnostics } from "../../src/modules/parser";
@@ -261,6 +263,7 @@ function ensureLiveAllowed(options: CliOptions) {
   if (!process.env[options.apiKeyEnv]) {
     throw new Error(`Cleaning comparison requires API key env var ${options.apiKeyEnv}`);
   }
+  options.baseUrl = normalizeBaseUrl(options.baseUrl);
 }
 
 function walk(dir: string): string[] {
@@ -501,13 +504,12 @@ async function callModel(
   mode: CleaningMode,
   requestLog: ModelRequestLogEntry[],
 ): Promise<{ modelBook: unknown; statusCode: number }> {
-  const baseUrl = new URL(options.baseUrl).toString().replace(/\/+$/, "");
-  const url = `${baseUrl}/chat/completions`;
+  const url = `${options.baseUrl}/chat/completions`;
   const transport = new FetchOpenAICompatibleTransport();
   const entry: ModelRequestLogEntry = {
     mode,
     subjectId: sample.subjectId,
-    url: redactOpenAICompatibleApiKey(url, apiKey),
+    url: redactOpenAICompatibleSecrets(url, apiKey),
     startedAt: new Date().toISOString(),
     ok: false,
   };
@@ -564,7 +566,7 @@ async function callModel(
   } catch (error: any) {
     entry.finishedAt = new Date().toISOString();
     entry.errorName = error?.name || "Error";
-    entry.errorMessage = redactOpenAICompatibleApiKey(error?.message || String(error), apiKey);
+    entry.errorMessage = redactOpenAICompatibleSecrets(error?.message || String(error), apiKey);
     throw error;
   }
 }
@@ -600,7 +602,7 @@ async function runMode(
     return {
       mode,
       ok: false,
-      error: redactOpenAICompatibleApiKey(error?.message || String(error), apiKey),
+      error: redactOpenAICompatibleSecrets(error?.message || String(error), apiKey),
       statusCode: typeof error?.statusCode === "number" ? error.statusCode : undefined,
     };
   }
@@ -658,7 +660,7 @@ function summarize(records: SampleComparison[], requestLog: ModelRequestLogEntry
     executionMode: "live",
     mode: "openai-compatible-cleaning-comparison",
     model: options.model,
-    baseUrl: options.baseUrl,
+    baseUrl: redactOpenAICompatibleBaseUrl(options.baseUrl),
     sampleCount: records.length,
     parsedSamples: records.filter((record) => record.ruleBook).length,
     parserFailures: records.filter((record) => record.parserError).length,
@@ -705,7 +707,7 @@ Generated at: ${new Date().toISOString()}
 
 Model: \`${options.model}\`
 
-Base URL: \`${options.baseUrl}\`
+Base URL: \`${redactOpenAICompatibleBaseUrl(options.baseUrl)}\`
 
 Samples: ${summary.sampleCount}
 
@@ -791,7 +793,7 @@ async function run() {
         throw new Error(record.restricted.error);
       }
     } catch (error: any) {
-      record.parserError = redactOpenAICompatibleApiKey(error?.message || String(error), apiKey);
+      record.parserError = redactOpenAICompatibleSecrets(error?.message || String(error), apiKey);
       if (!options.continueOnError) throw error;
     }
 

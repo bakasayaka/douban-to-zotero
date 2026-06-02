@@ -14,7 +14,9 @@ import {
   OPENAI_COMPATIBLE_CLEANER_PROMPT_TEMPLATE_VERSION,
   OPENAI_COMPATIBLE_CLEANER_SYSTEM_PROMPT,
   OpenAICompatibleMetadataCleaner,
-  redactOpenAICompatibleApiKey,
+  normalizeBaseUrl,
+  redactOpenAICompatibleBaseUrl,
+  redactOpenAICompatibleSecrets,
   type ModelRequestLogEntry,
 } from "../../src/modules/openai-compatible-client";
 import { FetchOpenAICompatibleTransport } from "../../src/modules/openai-compatible-transport";
@@ -235,7 +237,7 @@ function persistenceSafeErrorMessage(error: unknown, apiKey?: string): string {
   const message = error instanceof Error
     ? error.message
     : String(error);
-  return redactOpenAICompatibleApiKey(message, apiKey);
+  return redactOpenAICompatibleSecrets(message, apiKey);
 }
 
 function parseJson<T>(text: string, label: string): T {
@@ -472,6 +474,7 @@ function ensureLiveAllowed(options: CliOptions) {
   if (!process.env[options.apiKeyEnv]) {
     throw new Error(`OpenAI-compatible cleaning requires API key env var ${options.apiKeyEnv}`);
   }
+  options.baseUrl = normalizeBaseUrl(options.baseUrl);
 }
 
 async function run() {
@@ -489,6 +492,7 @@ async function run() {
   const stamp = runStamp(started);
   const modelId = safeIdPart(options.model);
   const cleaningRunId = `cleaning-run-openai-compatible-${modelId}-${stamp}`;
+  const persistenceSafeBaseUrl = redactOpenAICompatibleBaseUrl(options.baseUrl);
   const requestLog: ModelRequestLogEntry[] = [];
   const results: CleanedRecordResult[] = [];
   const db = new DatabaseSync(options.dbPath);
@@ -518,7 +522,7 @@ async function run() {
       options.model,
       promptTemplateHash(),
       json({
-        baseUrl: options.baseUrl,
+        baseUrl: persistenceSafeBaseUrl,
         temperature: options.temperature,
         timeoutMs: options.timeoutMs,
         limit: options.limit,
@@ -623,7 +627,7 @@ async function run() {
       successful,
       failed,
       model: options.model,
-      baseUrl: options.baseUrl,
+      baseUrl: persistenceSafeBaseUrl,
       requestLogPath: relative(rootDir, options.requestLogPath),
       requestCount: requestLog.length,
       results,

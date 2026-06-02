@@ -1,7 +1,7 @@
 import { build } from "esbuild";
 import {
   copyFileSync, mkdirSync, readFileSync, writeFileSync,
-  cpSync, existsSync, readdirSync, statSync,
+  cpSync, existsSync, readdirSync, rmSync, statSync,
 } from "fs";
 import { join, resolve, dirname } from "path";
 import { execSync } from "child_process";
@@ -12,6 +12,12 @@ const isDev = process.argv.includes("--dev");
 const rootDir = resolve(__dirname, "..");
 const buildDir = join(rootDir, "build");
 const addonDir = join(buildDir, "addon");
+const FIRST_VERSION_EXCLUDED_PRODUCTION_ADDON_FILES = [
+  join("content", "series-dialog.xhtml"),
+];
+const FIRST_VERSION_EXCLUDED_PRODUCTION_LOCALE_IDS = [
+  "menu-series-import",
+];
 
 // Read package.json config
 const pkg = JSON.parse(readFileSync(join(rootDir, "package.json"), "utf-8"));
@@ -19,13 +25,43 @@ const { addonName, addonID, addonRef, prefsPrefix } = pkg.config;
 
 // Clean and create build directory
 if (existsSync(addonDir)) {
-  const { rmSync } = await import("fs");
   rmSync(addonDir, { recursive: true });
 }
 mkdirSync(join(addonDir, "content", "scripts"), { recursive: true });
 
 // Copy addon resources
 cpSync(join(rootDir, "addon"), addonDir, { recursive: true });
+
+function removeFirstVersionProductionResources() {
+  for (const relPath of FIRST_VERSION_EXCLUDED_PRODUCTION_ADDON_FILES) {
+    rmSync(join(addonDir, relPath), { force: true });
+  }
+
+  const localeRoot = join(addonDir, "locale");
+  if (!existsSync(localeRoot)) return;
+  for (const locale of readdirSync(localeRoot)) {
+    const localeDir = join(localeRoot, locale);
+    if (!statSync(localeDir).isDirectory()) continue;
+    for (const entry of readdirSync(localeDir)) {
+      if (!entry.endsWith(".ftl")) continue;
+      const path = join(localeDir, entry);
+      const original = readFileSync(path, "utf-8");
+      const filtered = original
+        .split(/\r?\n/)
+        .filter((line) =>
+          !FIRST_VERSION_EXCLUDED_PRODUCTION_LOCALE_IDS.some((id) =>
+            new RegExp(`^${id}\\s*=`).test(line),
+          ),
+        )
+        .join("\n");
+      if (filtered !== original) writeFileSync(path, filtered, "utf-8");
+    }
+  }
+}
+
+if (!isDev) {
+  removeFirstVersionProductionResources();
+}
 
 // Bundle TypeScript
 await build({

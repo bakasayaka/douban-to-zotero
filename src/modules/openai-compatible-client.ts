@@ -46,10 +46,47 @@ export const OPENAI_COMPATIBLE_CLEANER_SYSTEM_PROMPT = [
 ].join(" ");
 
 export const OPENAI_COMPATIBLE_REDACTED_API_KEY = "[redacted-api-key]";
+export const OPENAI_COMPATIBLE_REDACTED_URL_SECRET = "redacted";
+const OPENAI_COMPATIBLE_SENSITIVE_URL_PARAM =
+  /^(?:api[-_]?key|access[-_]?token|token|secret|password|authorization|auth|bearer|key)$/i;
 
 export function redactOpenAICompatibleApiKey(text: string, apiKey?: string): string {
   if (!apiKey) return text;
   return text.split(apiKey).join(OPENAI_COMPATIBLE_REDACTED_API_KEY);
+}
+
+export function redactOpenAICompatibleBaseUrl(baseUrl: string): string {
+  try {
+    const parsed = new URL(baseUrl);
+    if (parsed.username || parsed.password) {
+      parsed.username = OPENAI_COMPATIBLE_REDACTED_URL_SECRET;
+      parsed.password = "";
+    }
+    const sensitiveQueryKeys: string[] = [];
+    parsed.searchParams.forEach((_value, key) => {
+      if (OPENAI_COMPATIBLE_SENSITIVE_URL_PARAM.test(key)) {
+        sensitiveQueryKeys.push(key);
+      }
+    });
+    for (const key of sensitiveQueryKeys) {
+      parsed.searchParams.set(key, OPENAI_COMPATIBLE_REDACTED_URL_SECRET);
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return baseUrl;
+  }
+}
+
+export function redactOpenAICompatibleBaseUrlSecrets(text: string): string {
+  return text.replace(/\bhttps?:\/\/[^\s"'`<>]+/gi, (url) =>
+    redactOpenAICompatibleBaseUrl(url),
+  );
+}
+
+export function redactOpenAICompatibleSecrets(text: string, apiKey?: string): string {
+  return redactOpenAICompatibleBaseUrlSecrets(
+    redactOpenAICompatibleApiKey(text, apiKey),
+  );
 }
 
 export interface ModelRequestLogEntry {
@@ -94,7 +131,7 @@ export class ModelRateLimitError extends ModelHttpError {
   }
 }
 
-function normalizeBaseUrl(baseUrl: string): string {
+export function normalizeBaseUrl(baseUrl: string): string {
   const parsed = new URL(baseUrl);
   const isLocalhost = ["localhost", "127.0.0.1", "::1"].includes(parsed.hostname);
   if (parsed.protocol !== "https:" && !(isLocalhost && parsed.protocol === "http:")) {
@@ -145,7 +182,7 @@ export class OpenAICompatibleMetadataCleaner {
     const baseUrl = normalizeBaseUrl(this.config.baseUrl);
     const url = `${baseUrl}/chat/completions`;
     const entry: ModelRequestLogEntry = {
-      url: redactOpenAICompatibleApiKey(url, this.config.apiKey),
+      url: redactOpenAICompatibleSecrets(url, this.config.apiKey),
       startedAt: new Date().toISOString(),
       ok: false,
     };
@@ -202,7 +239,7 @@ export class OpenAICompatibleMetadataCleaner {
     } catch (e: any) {
       entry.finishedAt = new Date().toISOString();
       entry.errorName = e.name || "Error";
-      entry.errorMessage = redactOpenAICompatibleApiKey(
+      entry.errorMessage = redactOpenAICompatibleSecrets(
         e.message || String(e),
         this.config.apiKey,
       );

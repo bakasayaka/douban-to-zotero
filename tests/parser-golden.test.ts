@@ -27,8 +27,12 @@ import { bookToZoteroBookPayload } from "../src/modules/zotero-book-payload";
 import {
   OPENAI_COMPATIBLE_REDACTED_API_KEY,
   OpenAICompatibleMetadataCleaner,
+  ModelConfigurationError,
   ModelHttpError,
   ModelNetworkAccessDeniedError,
+  normalizeBaseUrl,
+  redactOpenAICompatibleBaseUrl,
+  redactOpenAICompatibleSecrets,
 } from "../src/modules/openai-compatible-client";
 import type { OpenAICompatibleTransport } from "../src/modules/openai-compatible-transport";
 import {
@@ -158,6 +162,7 @@ function wishListFixtureHtml(options: {
   subjectIds: number[];
   nextHref?: string;
   titleBeforeHref?: boolean;
+  includeSubjectNum?: boolean;
 }): string {
   const links = options.subjectIds
     .map((id, index) => {
@@ -171,14 +176,19 @@ function wishListFixtureHtml(options: {
   const next = options.nextHref
     ? `<span class="next"><link rel="next" href="${options.nextHref}"><a href="${options.nextHref}">Next &gt;</a></span>`
     : `<span class="next">&gt;</span>`;
+  const subjectNum = options.includeSubjectNum === false
+    ? ""
+    : `
+        <span class="subject-num">
+          ${options.rangeStart}-${options.rangeEnd}&nbsp;/&nbsp;${options.total}
+        </span>
+      `;
 
   return `
     <!doctype html>
     <html>
       <body>
-        <span class="subject-num">
-          ${options.rangeStart}-${options.rangeEnd}&nbsp;/&nbsp;${options.total}
-        </span>
+        ${subjectNum}
         <div class="grid-view">${links}</div>
         <div class="paginator">${next}</div>
       </body>
@@ -367,6 +377,96 @@ test("wish-list fetcher warns when anonymous pages expose fewer entries than sub
     result.warnings.join("\n"),
     /readlist-visible-count-mismatch: Douban declared 16 wish-list books, but only 15 visible list entries were fetched anonymously/,
   );
+});
+
+test("wish-list fetcher does not stop early on cross-page duplicate links", async () => {
+  const uid = "duplicate-page-user";
+  const firstPageUrl = `https://book.douban.com/people/${uid}/wish?start=0`;
+  const secondPageHref = `/people/${uid}/wish?start=15&amp;sort=time&amp;rating=all&amp;filter=all&amp;mode=grid`;
+  const secondPageUrl = `https://book.douban.com/people/${uid}/wish?start=15&sort=time&rating=all&filter=all&mode=grid`;
+  const thirdPageHref = `/people/${uid}/wish?start=30&amp;sort=time&amp;rating=all&amp;filter=all&amp;mode=grid`;
+  const thirdPageUrl = `https://book.douban.com/people/${uid}/wish?start=30&sort=time&rating=all&filter=all&mode=grid`;
+  const subjectIds = Array.from({ length: 16 }, (_, index) => 4000000 + index);
+  const source = new FixtureDoubanSource([
+    [
+      firstPageUrl,
+      wishListFixtureHtml({
+        rangeStart: 1,
+        rangeEnd: 15,
+        total: 16,
+        subjectIds: subjectIds.slice(0, 15),
+        nextHref: secondPageHref,
+      }),
+    ],
+    [
+      secondPageUrl,
+      wishListFixtureHtml({
+        rangeStart: 16,
+        rangeEnd: 16,
+        total: 16,
+        subjectIds: [subjectIds[0]],
+        nextHref: thirdPageHref,
+      }),
+    ],
+    [
+      thirdPageUrl,
+      wishListFixtureHtml({
+        rangeStart: 16,
+        rangeEnd: 16,
+        total: 16,
+        subjectIds: [subjectIds[15]],
+      }),
+    ],
+    ...subjectIds.map((id) => [subjectUrl(id), subjectFixtureHtml(id)] as [string, string]),
+  ]);
+
+  const result = await withFakeZoteroCache(() =>
+    fetchWishList(uid, () => {}, null, source),
+  );
+
+  assert.equal(result.books.length, 16);
+  assert.deepEqual(result.books.map((book) => book.url), subjectIds.map(subjectUrl));
+  assert.match(result.warnings.join("\n"), /readlist-duplicate-visible-links/);
+});
+
+test("wish-list fetcher can recover total count from later pages", async () => {
+  const uid = "late-total-user";
+  const firstPageUrl = `https://book.douban.com/people/${uid}/wish?start=0`;
+  const secondPageHref = `/people/${uid}/wish?start=15&amp;sort=time&amp;rating=all&amp;filter=all&amp;mode=grid`;
+  const secondPageUrl = `https://book.douban.com/people/${uid}/wish?start=15&sort=time&rating=all&filter=all&mode=grid`;
+  const subjectIds = Array.from({ length: 16 }, (_, index) => 5000000 + index);
+  const source = new FixtureDoubanSource([
+    [
+      firstPageUrl,
+      wishListFixtureHtml({
+        rangeStart: 1,
+        rangeEnd: 15,
+        total: 16,
+        subjectIds: subjectIds.slice(0, 15),
+        nextHref: secondPageHref,
+        includeSubjectNum: false,
+      }),
+    ],
+    [
+      secondPageUrl,
+      wishListFixtureHtml({
+        rangeStart: 16,
+        rangeEnd: 16,
+        total: 16,
+        subjectIds: subjectIds.slice(15),
+      }),
+    ],
+    ...subjectIds.map((id) => [subjectUrl(id), subjectFixtureHtml(id)] as [string, string]),
+  ]);
+  const progress: string[] = [];
+
+  const result = await withFakeZoteroCache(() =>
+    fetchWishList(uid, (_current, _total, message) => progress.push(message), null, source),
+  );
+
+  assert.equal(result.books.length, 16);
+  assert.deepEqual(result.warnings, []);
+  assert.ok(progress.some((message) => message.includes("Fetched 16/16 list entries.")));
 });
 
 test("live full-readlist capture summary distinguishes anonymous visibility from incomplete crawl", () => {
@@ -650,6 +750,32 @@ test("OpenAI-compatible cleaner rejects dry-run before making a request", async 
   assert.equal(cleaner.requestLog.length, 0);
 });
 
+test("OpenAI-compatible base URLs require HTTPS and redact embedded credentials", () => {
+  assert.throws(
+    () => normalizeBaseUrl("http://api.openai.example.invalid/v1"),
+    ModelConfigurationError,
+  );
+  assert.equal(
+    normalizeBaseUrl("http://localhost:11434/v1/"),
+    "http://localhost:11434/v1",
+  );
+
+  const credentialed = "https://user:password@example.invalid/v1?api_key=secret&model=ok";
+  const redactedUrl = redactOpenAICompatibleBaseUrl(credentialed);
+  assert.doesNotMatch(redactedUrl, /user|password|secret/);
+  assert.match(redactedUrl, /^https:\/\/redacted@example\.invalid\/v1\?/);
+  assert.match(redactedUrl, /api_key=redacted/);
+  assert.match(redactedUrl, /model=ok/);
+
+  const message = redactOpenAICompatibleSecrets(
+    `failed ${credentialed} with sk-test-secret-for-redaction`,
+    "sk-test-secret-for-redaction",
+  );
+  assert.doesNotMatch(message, /user|password|secret-for-redaction|api_key=secret/);
+  assert.match(message, /redacted@example\.invalid/);
+  assert.match(message, /\[redacted-api-key\]/);
+});
+
 test("OpenAI-compatible cleaner records and rejects non-2xx responses", async () => {
   const transport: OpenAICompatibleTransport = {
     async postJson() {
@@ -711,7 +837,7 @@ test("OpenAI-compatible cleaner never persists API keys in request logs", async 
   };
   const cleaner = new OpenAICompatibleMetadataCleaner(
     {
-      baseUrl: "https://api.openai.example.invalid/v1",
+      baseUrl: "https://user:password@api.openai.example.invalid/v1",
       apiKey: secret,
       model: "test-model",
     },
@@ -727,10 +853,13 @@ test("OpenAI-compatible cleaner never persists API keys in request logs", async 
 
   assert.equal(transportSawKey, secret);
   assert.equal(JSON.stringify(cleaner.requestLog).includes(secret), false);
+  assert.equal(JSON.stringify(cleaner.requestLog).includes("user"), false);
+  assert.equal(JSON.stringify(cleaner.requestLog).includes("password"), false);
   assert.match(
     cleaner.requestLog[0].errorMessage ?? "",
     new RegExp(OPENAI_COMPATIBLE_REDACTED_API_KEY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
   );
+  assert.match(cleaner.requestLog[0].url, /https:\/\/redacted@api\.openai\.example\.invalid/);
 });
 
 test("OpenAI-compatible cleaner requires low-risk supported language completion", async () => {
