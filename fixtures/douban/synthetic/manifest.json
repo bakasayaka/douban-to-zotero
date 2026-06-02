@@ -1,0 +1,29 @@
+{
+  "$schema": "douban-fixture-manifest-v1",
+  "mode": "dry-run",
+  "fixtures": [
+    {
+      "id": "synthetic-wishlist-page-1",
+      "kind": "wishlist-page",
+      "sourceUrl": "https://book.douban.com/people/test-user/wish?start=0",
+      "file": "wishlist-page-1.html",
+      "capturedAt": null,
+      "capturedByMode": "synthetic",
+      "purpose": "dry-run source preflight",
+      "redactions": [],
+      "notes": "Synthetic wishlist page with one subject link and no next page."
+    },
+    {
+      "id": "synthetic-subject-1000001",
+      "kind": "subject-page",
+      "sourceUrl": "https://book.douban.com/subject/1000001/",
+      "file": "subject-1000001.html",
+      "expected": "subject-1000001.expected.json",
+      "capturedAt": null,
+      "capturedByMode": "synthetic",
+      "purpose": "parser golden case",
+      "redactions": [],
+      "notes": "Exercises subtitle merge, original title note, CJK transliterated author splitting, translator, series, date normalization, language, and ISBN."
+    }
+  ]
+}

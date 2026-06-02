@@ -1,0 +1,34 @@
+{
+  "doubanUrl": "https://book.douban.com/subject/1000001/",
+  "doubanId": "1000001",
+  "title": "测试之书：一个用于干跑的样本",
+  "subtitle": "一个用于干跑的样本",
+  "creators": [
+    {
+      "firstName": "简",
+      "lastName": "奥斯汀",
+      "creatorType": "author",
+      "fieldMode": 0
+    },
+    {
+      "firstName": "",
+      "lastName": "王小明",
+      "creatorType": "translator",
+      "fieldMode": 1
+    }
+  ],
+  "publisher": "测试出版社",
+  "publishDate": "2024-03",
+  "isbn": "9781234567897",
+  "isbn13": "9781234567897",
+  "pages": "321",
+  "price": "68.00元",
+  "language": "zh",
+  "series": "测试丛书",
+  "originalTitle": "Test Book Original",
+  "abstractNote": "这是一个离线解析用的合成简介。",
+  "coverUrl": "https://img.example.invalid/cover.jpg",
+  "creatorNotes": [
+    "Jane Austen"
+  ]
+}
