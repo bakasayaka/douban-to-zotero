@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.sqlite binary
+*.sqlite3 binary
+*.xpi binary
+
+# Browser/live captures are raw evidence. Preserve source whitespace; do not
+# treat page HTML/MHTML spacing as code-style errors.
+fixtures/douban/captured/** -whitespace
+fixtures/douban/reference-samples/** -whitespace

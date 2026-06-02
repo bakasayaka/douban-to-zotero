@@ -1,0 +1,606 @@
+{
+  "$schema": "field-mapping-v2",
+  "$description": "豆瓣图书详情页 ↔ Zotero book item 完整字段清单与映射关系",
+  "doubanFields": {
+    "$count": 16,
+    "$summary": {
+      "mapped": 11,
+      "excluded": 5
+    },
+    "fields": [
+      {
+        "id": "title",
+        "label": "书名",
+        "mapped": true,
+        "mapType": "merge",
+        "mapsTo": [
+          "zotero.title"
+        ],
+        "notes": "与副标题合并写入 Title"
+      },
+      {
+        "id": "subtitle",
+        "label": "副标题",
+        "mapped": true,
+        "mapType": "merge",
+        "mapsTo": [
+          "zotero.title"
+        ],
+        "notes": "拼入主标题，格式：主标题 : 副标题"
+      },
+      {
+        "id": "originalTitle",
+        "label": "原作名",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.note"
+        ],
+        "notes": "写入子笔记"
+      },
+      {
+        "id": "isbn",
+        "label": "统一书号/ISBN",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.ISBN"
+        ],
+        "notes": "ISBN-10 和 ISBN-13 均填入"
+      },
+      {
+        "id": "author",
+        "label": "作者",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.creators.author"
+        ],
+        "notes": null
+      },
+      {
+        "id": "translator",
+        "label": "译者",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.creators.translator"
+        ],
+        "notes": null
+      },
+      {
+        "id": "publisher",
+        "label": "出版社",
+        "mapped": true,
+        "mapType": "split",
+        "mapsTo": [
+          "zotero.publisher",
+          "zotero.place"
+        ],
+        "notes": "可能含地名前缀（如「北京：商务印书馆」），需拆分"
+      },
+      {
+        "id": "imprint",
+        "label": "出品方",
+        "mapped": true,
+        "mapType": "conditional",
+        "mapsTo": [
+          "zotero.publisher"
+        ],
+        "notes": "仅在出版社为空时作为 fallback"
+      },
+      {
+        "id": "pubdate",
+        "label": "出版日期",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.date"
+        ],
+        "notes": "YYYYMMDD，最少需年份"
+      },
+      {
+        "id": "binding",
+        "label": "装帧",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.extra:Format"
+        ],
+        "notes": "平装/精装/Paperback/Hardcover/其他"
+      },
+      {
+        "id": "series",
+        "label": "丛书",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.series"
+        ],
+        "notes": null
+      },
+      {
+        "id": "pages",
+        "label": "页数",
+        "mapped": true,
+        "mapType": "1:1",
+        "mapsTo": [
+          "zotero.numPages"
+        ],
+        "notes": null
+      },
+      {
+        "id": "price",
+        "label": "定价",
+        "mapped": false,
+        "mapType": "excluded",
+        "mapsTo": [],
+        "notes": "Zotero 无对应字段"
+      },
+      {
+        "id": "tags",
+        "label": "标签",
+        "mapped": false,
+        "mapType": "excluded",
+        "mapsTo": [],
+        "notes": "Zotero 无对应字段"
+      },
+      {
+        "id": "summary",
+        "label": "内容简介",
+        "mapped": false,
+        "mapType": "excluded",
+        "mapsTo": [],
+        "notes": "Zotero 无对应字段"
+      },
+      {
+        "id": "authorBio",
+        "label": "作者简介",
+        "mapped": false,
+        "mapType": "excluded",
+        "mapsTo": [],
+        "notes": "Zotero 无对应字段"
+      },
+      {
+        "id": "toc",
+        "label": "目录",
+        "mapped": false,
+        "mapType": "excluded",
+        "mapsTo": [],
+        "notes": "Zotero 无对应字段"
+      }
+    ]
+  },
+  "zoteroFields": {
+    "$count": 33,
+    "$summary": {
+      "receivesMapping": 16,
+      "noSource": 5,
+      "systemAuto": 3,
+      "irrelevant": 9
+    },
+    "fields": [
+      {
+        "id": "title",
+        "label": "Title",
+        "hasSource": true,
+        "sourceType": "merge",
+        "sourcedFrom": [
+          "douban.title",
+          "douban.subtitle"
+        ],
+        "notes": "两个豆瓣字段合并写入"
+      },
+      {
+        "id": "creators.author",
+        "label": "Author",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.author"
+        ],
+        "notes": "含国籍去除、姓名拆分、角色映射"
+      },
+      {
+        "id": "creators.translator",
+        "label": "Translator",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.translator"
+        ],
+        "notes": "同 Author 流水线"
+      },
+      {
+        "id": "creators.contributor",
+        "label": "Contributor",
+        "hasSource": true,
+        "sourceType": "uncertain",
+        "sourcedFrom": [
+          "douban.author(角色后缀)"
+        ],
+        "notes": "校/校对 → contributor"
+      },
+      {
+        "id": "creators.seriesEditor",
+        "label": "Series Editor",
+        "hasSource": true,
+        "sourceType": "uncertain",
+        "sourcedFrom": [
+          "douban.author(角色后缀)"
+        ],
+        "notes": "视情况编入"
+      },
+      {
+        "id": "creators.editor",
+        "label": "Editor",
+        "hasSource": true,
+        "sourceType": "uncertain",
+        "sourcedFrom": [
+          "douban.author(角色后缀)"
+        ],
+        "notes": "编/主编/编辑/编著 → editor"
+      },
+      {
+        "id": "series",
+        "label": "Series",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.series"
+        ],
+        "notes": null
+      },
+      {
+        "id": "seriesNumber",
+        "label": "Series Number",
+        "hasSource": false,
+        "sourceType": "none",
+        "sourcedFrom": [],
+        "notes": "豆瓣无此信息，多卷导入时由 file-matcher 填充"
+      },
+      {
+        "id": "volume",
+        "label": "Volume",
+        "hasSource": true,
+        "sourceType": "derived",
+        "sourcedFrom": [
+          "douban.title"
+        ],
+        "notes": "从书名中提取（上/下册、第N卷等）"
+      },
+      {
+        "id": "numberOfVolumes",
+        "label": "# of Volumes",
+        "hasSource": false,
+        "sourceType": "none",
+        "sourcedFrom": [],
+        "notes": "豆瓣无此信息"
+      },
+      {
+        "id": "edition",
+        "label": "Edition",
+        "hasSource": true,
+        "sourceType": "derived",
+        "sourcedFrom": [
+          "douban.title"
+        ],
+        "notes": "从书名中提取（第N版、修订版等）"
+      },
+      {
+        "id": "date",
+        "label": "Date",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.pubdate"
+        ],
+        "notes": "4种日期格式规范化"
+      },
+      {
+        "id": "publisher",
+        "label": "Publisher",
+        "hasSource": true,
+        "sourceType": "multi_source",
+        "sourcedFrom": [
+          "douban.publisher",
+          "douban.imprint"
+        ],
+        "notes": "出版社优先，出品方 fallback；可能需拆出地名"
+      },
+      {
+        "id": "place",
+        "label": "Place",
+        "hasSource": true,
+        "sourceType": "derived",
+        "sourcedFrom": [
+          "douban.publisher"
+        ],
+        "notes": "从出版社字段拆出地名前缀"
+      },
+      {
+        "id": "numPages",
+        "label": "# of Pages",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.pages"
+        ],
+        "notes": null
+      },
+      {
+        "id": "ISBN",
+        "label": "ISBN",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.isbn"
+        ],
+        "notes": null
+      },
+      {
+        "id": "url",
+        "label": "URL",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.url(隐式)"
+        ],
+        "notes": "豆瓣详情页 URL"
+      },
+      {
+        "id": "language",
+        "label": "Language",
+        "hasSource": true,
+        "sourceType": "derived",
+        "sourcedFrom": [
+          "douban.title(字符集推断)"
+        ],
+        "notes": "豆瓣无此字段，从标题字符集推断"
+      },
+      {
+        "id": "extra:Format",
+        "label": "Format",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.binding"
+        ],
+        "notes": "写入 Extra 字段"
+      },
+      {
+        "id": "note",
+        "label": "Note",
+        "hasSource": true,
+        "sourceType": "1:1",
+        "sourcedFrom": [
+          "douban.originalTitle"
+        ],
+        "notes": "原作名 + 作者原名写入子笔记"
+      },
+      {
+        "id": "dateAdded",
+        "label": "Date Added",
+        "hasSource": false,
+        "sourceType": "system",
+        "sourcedFrom": [],
+        "notes": "系统时间戳"
+      },
+      {
+        "id": "dateModified",
+        "label": "Modified",
+        "hasSource": false,
+        "sourceType": "system",
+        "sourcedFrom": [],
+        "notes": "系统时间戳"
+      },
+      {
+        "id": "accessDate",
+        "label": "Accessed",
+        "hasSource": false,
+        "sourceType": "system",
+        "sourcedFrom": [],
+        "notes": "与系统时间戳重叠"
+      },
+      {
+        "id": "rights",
+        "label": "Rights",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "附加字段"
+      },
+      {
+        "id": "extra",
+        "label": "Extra",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "附加字段（装帧可能写入此字段）"
+      },
+      {
+        "id": "shortTitle",
+        "label": "Short Title",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "取决于用户习惯"
+      },
+      {
+        "id": "archive",
+        "label": "Archive",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "馆藏信息"
+      },
+      {
+        "id": "archiveLocation",
+        "label": "Loc. in Archive",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "馆藏信息"
+      },
+      {
+        "id": "libraryCatalog",
+        "label": "Library Catalogue",
+        "hasSource": true,
+        "sourceType": "constant",
+        "sourcedFrom": [],
+        "notes": "恒定值 \"Douban\"，标识数据来源"
+      },
+      {
+        "id": "callNumber",
+        "label": "Call Number",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "馆藏信息"
+      },
+      {
+        "id": "ISSN",
+        "label": "ISSN",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "期刊字段"
+      },
+      {
+        "id": "DOI",
+        "label": "DOI",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "图书不用"
+      },
+      {
+        "id": "originalDate",
+        "label": "Original Date",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "豆瓣对原书支持差"
+      },
+      {
+        "id": "originalPublisher",
+        "label": "Original Publisher",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "豆瓣对原书支持差"
+      },
+      {
+        "id": "originalPlace",
+        "label": "Original Place",
+        "hasSource": false,
+        "sourceType": "irrelevant",
+        "sourcedFrom": [],
+        "notes": "豆瓣对原书支持差"
+      }
+    ]
+  },
+  "mappingTypeSummary": {
+    "$description": "映射类型统计。从 Zotero（接收端）视角统计，因为一个 Zotero 字段可能由多个豆瓣字段汇入。",
+    "1:1": {
+      "count": 9,
+      "description": "单映射：一个豆瓣字段直接对应一个 Zotero 字段",
+      "examples": [
+        "出版日期→Date",
+        "页数→Pages",
+        "丛书→Series",
+        "ISBN→ISBN",
+        "URL→URL"
+      ]
+    },
+    "merge": {
+      "count": 1,
+      "description": "多合一：多个豆瓣字段合并写入同一个 Zotero 字段",
+      "examples": [
+        "书名+副标题 → Title"
+      ]
+    },
+    "split": {
+      "count": 1,
+      "description": "一拆多：一个豆瓣字段拆分写入多个 Zotero 字段",
+      "examples": [
+        "出版社 → Publisher + Place"
+      ]
+    },
+    "multi_source": {
+      "count": 1,
+      "description": "多源候选：多个豆瓣字段按优先级竞争写入同一 Zotero 字段",
+      "examples": [
+        "出版社|出品方 → Publisher"
+      ]
+    },
+    "conditional": {
+      "count": 1,
+      "description": "条件映射：仅在特定条件下激活",
+      "examples": [
+        "出品方 → Publisher（仅出版社为空时）"
+      ]
+    },
+    "derived": {
+      "count": 4,
+      "description": "派生映射：Zotero 字段无直接豆瓣源，需从其他字段推断或提取",
+      "examples": [
+        "Title→Volume",
+        "Title→Edition",
+        "Publisher→Place",
+        "Title字符集→Language"
+      ]
+    },
+    "uncertain": {
+      "count": 3,
+      "description": "不确定映射：角色对应关系需要人工复核",
+      "examples": [
+        "编→Editor?",
+        "校→Contributor?",
+        "主编→SeriesEditor?"
+      ]
+    },
+    "excluded": {
+      "count": 5,
+      "description": "豆瓣字段无 Zotero 对应，直接丢弃",
+      "examples": [
+        "标签",
+        "内容简介",
+        "定价"
+      ]
+    },
+    "none": {
+      "count": 2,
+      "description": "Zotero 字段无任何豆瓣数据源",
+      "examples": [
+        "Series Number",
+        "# of Volumes"
+      ]
+    },
+    "system": {
+      "count": 3,
+      "description": "Zotero 系统自动填充",
+      "examples": [
+        "Date Added",
+        "Modified",
+        "Accessed"
+      ]
+    },
+    "constant": {
+      "count": 1,
+      "description": "恒定值：不依赖豆瓣字段，对所有条目填入固定值",
+      "examples": [
+        "Library Catalogue = \"Douban\""
+      ]
+    },
+    "irrelevant": {
+      "count": 9,
+      "description": "Zotero 字段与本项目无关",
+      "examples": [
+        "ISSN",
+        "DOI",
+        "Archive"
+      ]
+    }
+  }
+}

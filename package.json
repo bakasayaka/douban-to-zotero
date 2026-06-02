@@ -1,0 +1,42 @@
+{
+  "name": "douban-to-zotero",
+  "version": "0.1.0",
+  "description": "Sync books from Douban wish list to Zotero",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs --dev",
+    "typecheck": "tsc --noEmit",
+    "test:dry": "node scripts/test-dry-run.mjs",
+    "db:dry": "node scripts/populate-dry-run-db.mjs --reset",
+    "db:validate:dry": "node scripts/validate-dry-run-db.mjs",
+    "db:clean:openai-compatible": "node scripts/clean-openai-compatible-to-db.mjs",
+    "db:import:openai-comparison": "node scripts/import-openai-cleaning-comparison-to-db.mjs",
+    "db:promote:openai-cleaned": "node scripts/promote-openai-cleaned-records.mjs",
+    "db:replay:readlist-normalization": "node scripts/replay-readlist-normalization-to-db.mjs",
+    "reference:cleaning:compare": "node scripts/compare-openai-cleaning-modes.mjs",
+    "smoke:ui:dry": "node scripts/smoke-ui-contract.mjs",
+    "smoke:zotero-write:payload": "node scripts/export-zotero-write-smoke-payload.mjs",
+    "smoke:zotero-duplicate:payload": "node scripts/export-zotero-duplicate-smoke-payload.mjs",
+    "smoke:reference-write:payload": "node scripts/export-reference-sample-write-inspection-payload.mjs",
+    "smoke:readlist-reference-write:payload": "node scripts/export-live-readlist-write-inspection-payload.mjs",
+    "reference:coverage:analyze": "node scripts/analyze-reference-sample-field-coverage.mjs",
+    "db:capture:live": "node scripts/capture-live-to-db.mjs",
+    "capture:structure-study": "node scripts/capture-structure-study.mjs",
+    "capture:readlist-pagination": "node scripts/capture-readlist-pagination-candidates.mjs",
+    "validate:readlist-pagination": "node scripts/validate-readlist-pagination-capture.mjs",
+    "reference:capture:browser": "node scripts/capture-browser-reference-samples.mjs",
+    "audit:version-control": "node scripts/audit-version-control.mjs"
+  },
+  "config": {
+    "addonName": "Douban to Zotero",
+    "addonID": "douban-to-zotero@github.com",
+    "addonRef": "doubantozoter",
+    "prefsPrefix": "extensions.zotero.doubantozoter"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.3.0",
+    "zotero-types": "^2.0.0"
+  }
+}
