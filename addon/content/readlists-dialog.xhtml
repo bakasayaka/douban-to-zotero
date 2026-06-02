@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Douban Readlists"
+        width="640" height="420"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 12px; gap: 10px;">
+    <html:h2 style="margin: 0;">Readlists</html:h2>
+
+    <html:select id="readlists-list"
+                 size="8"
+                 style="width: 100%; min-height: 140px;"></html:select>
+
+    <grid>
+      <columns>
+        <column style="width: 90px;" />
+        <column flex="1" />
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="UID / URL" />
+          <html:input id="readlist-input"
+                      type="text"
+                      placeholder="178141656 or https://book.douban.com/people/178141656/wish"
+                      style="width: 100%;" />
+        </row>
+        <row align="center">
+          <label value="Label" />
+          <html:input id="readlist-label-input"
+                      type="text"
+                      placeholder="Optional"
+                      style="width: 100%;" />
+        </row>
+      </rows>
+    </grid>
+
+    <html:div id="readlist-canonical" style="color: #555; min-height: 18px;"></html:div>
+    <html:div id="readlists-status" style="color: #555; min-height: 18px;"></html:div>
+
+    <hbox align="center">
+      <button id="btn-add-readlist" label="Add / Update" />
+      <button id="btn-delete-readlist" label="Delete" />
+      <spacer flex="1" />
+      <button id="btn-close-readlists" label="Close" />
+    </hbox>
+  </vbox>
+</window>

@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Clear Local Data"
+        width="640" height="430"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 12px; gap: 10px;">
+    <html:h2 style="margin: 0;">Clear Local Data</html:h2>
+
+    <html:label>
+      <html:input id="clear-fetch-cache" type="checkbox" checked="checked" />
+      Temporary fetch cache
+    </html:label>
+    <html:label>
+      <html:input id="clear-plugin-logs" type="checkbox" checked="checked" />
+      Plugin logs
+    </html:label>
+    <html:label>
+      <html:input id="clear-readlists" type="checkbox" />
+      Saved readlists
+    </html:label>
+    <html:label>
+      <html:input id="clear-openai-settings" type="checkbox" />
+      OpenAI-compatible endpoint and model
+    </html:label>
+    <html:label>
+      <html:input id="clear-openai-api-key" type="checkbox" />
+      OpenAI-compatible API key
+    </html:label>
+
+    <html:pre id="clear-local-data-status"
+              style="min-height: 90px; color: #555; white-space: pre-wrap;"></html:pre>
+
+    <hbox align="center">
+      <button id="btn-apply-clear-local-data" label="Clear Selected" />
+      <spacer flex="1" />
+      <button id="btn-close-clear-local-data" label="Close" />
+    </hbox>
+  </vbox>
+</window>

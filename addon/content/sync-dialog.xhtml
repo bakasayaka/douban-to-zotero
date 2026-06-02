@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="导入豆瓣想读"
+        width="800" height="600"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 10px; display: flex; flex-direction: column; min-height: 0;">
+    <html:div id="sync-header" style="margin-bottom: 10px; flex-shrink: 0;">
+      <html:h3 style="margin: 0 0 5px 0;">抓取结果</html:h3>
+      <html:div id="sync-summary" style="color: gray; font-size: 12px;"></html:div>
+    </html:div>
+
+    <html:div id="sync-list" style="flex: 1; overflow-y: auto; border: 1px solid #ccc; padding: 5px; min-height: 0;">
+      <!-- 动态填充书目列表 -->
+    </html:div>
+
+    <hbox style="margin-top: 10px;" align="center">
+      <button id="btn-select-all" label="全选新书" />
+      <button id="btn-deselect-all" label="取消全选" />
+      <spacer flex="1" />
+      <html:span id="selected-count" style="margin-right: 10px; color: gray;"></html:span>
+      <button id="btn-import" label="导入选中" default="true" />
+      <button id="btn-cancel" label="取消" />
+    </hbox>
+  </vbox>
+</window>

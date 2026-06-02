@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="Douban to Zotero Diagnostics"
+        width="720" height="520"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 12px; gap: 10px;">
+    <html:h2 style="margin: 0;">Diagnostics and Logs</html:h2>
+    <html:textarea id="diagnostics-report"
+                   readonly="readonly"
+                   style="width: 100%; min-height: 360px; font-family: monospace; resize: vertical;"></html:textarea>
+    <hbox align="center">
+      <button id="btn-refresh-diagnostics" label="Refresh" />
+      <spacer flex="1" />
+      <button id="btn-close-diagnostics" label="Close" />
+    </hbox>
+  </vbox>
+</window>

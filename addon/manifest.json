@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "__addonName__",
+  "version": "__version__",
+  "description": "Sync books from Douban wish list to Zotero",
+  "author": "fanyj",
+  "icons": {},
+  "applications": {
+    "zotero": {
+      "id": "__addonID__",
+      "update_url": "https://raw.githubusercontent.com/fanyj/douban-to-zotero/main/update.json",
+      "strict_min_version": "9.0",
+      "strict_max_version": "9.*"
+    }
+  }
+}

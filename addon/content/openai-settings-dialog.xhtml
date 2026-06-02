@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="OpenAI-compatible Settings"
+        width="640" height="360"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 12px; gap: 10px;">
+    <html:h2 style="margin: 0;">OpenAI-compatible Settings</html:h2>
+    <html:div style="color: #8a4b00;">
+      Experimental test feature. Disabled unless explicitly used.
+    </html:div>
+
+    <grid>
+      <columns>
+        <column style="width: 90px;" />
+        <column flex="1" />
+      </columns>
+      <rows>
+        <row align="center">
+          <label value="Endpoint" />
+          <html:input id="openai-base-url"
+                      type="text"
+                      placeholder="https://api.example.com"
+                      style="width: 100%;" />
+        </row>
+        <row align="center">
+          <label value="Model" />
+          <html:input id="openai-model"
+                      type="text"
+                      placeholder="model-name"
+                      style="width: 100%;" />
+        </row>
+        <row align="center">
+          <label value="API key" />
+          <html:input id="openai-api-key"
+                      type="password"
+                      style="width: 100%;" />
+        </row>
+      </rows>
+    </grid>
+
+    <html:div id="openai-status" style="color: #555; min-height: 18px;"></html:div>
+    <html:div style="color: #555;">
+      Diagnostics show only whether a key is configured.
+    </html:div>
+
+    <hbox align="center">
+      <button id="btn-save-openai-settings" label="Save" />
+      <button id="btn-clear-openai-key" label="Clear API Key" />
+      <spacer flex="1" />
+      <button id="btn-close-openai-settings" label="Close" />
+    </hbox>
+  </vbox>
+</window>

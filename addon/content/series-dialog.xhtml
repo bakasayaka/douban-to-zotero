@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        title="多卷批量导入"
+        width="1000" height="650"
+        onload="window.arguments[0].init(window);">
+  <vbox flex="1" style="padding: 10px;">
+
+    <!-- 输入区域 -->
+    <groupbox id="input-section">
+      <label><html:h3 style="margin: 0;">数据来源</html:h3></label>
+
+      <hbox align="center" style="margin-bottom: 8px;">
+        <html:input type="radio" name="source" id="source-douban" checked="true" />
+        <label value="豆瓣丛书页面" control="source-douban" />
+        <html:input type="radio" name="source" id="source-manual" />
+        <label value="手动匹配元数据" control="source-manual" />
+      </hbox>
+
+      <vbox id="douban-source-fields">
+        <hbox align="center" style="margin-bottom: 8px;">
+          <label value="丛书 URL：" style="min-width: 80px;" />
+          <html:input type="text" id="series-url" placeholder="https://book.douban.com/series/12345"
+                      style="flex: 1;" />
+        </hbox>
+      </vbox>
+
+      <vbox id="manual-source-fields" style="display: none;">
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="蓝本 URL：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-template-url"
+                      placeholder="（可选）豆瓣条目 URL，如 https://book.douban.com/subject/12345/"
+                      style="flex: 1;" />
+          <button id="btn-fill-template" label="填充" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="系列名称：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-series-name" style="flex: 1;" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="作者：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-author" style="flex: 1;"
+                      placeholder="多人用逗号分隔" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="编者：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-editor" style="flex: 1;"
+                      placeholder="（可选）多人用逗号分隔" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="译者：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-translator" style="flex: 1;"
+                      placeholder="（可选）多人用逗号分隔" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="出版社：" style="min-width: 80px;" />
+          <html:input type="text" id="manual-publisher" style="flex: 1;" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="Date" style="min-width: 80px;" />
+          <html:input type="text" id="manual-publish-date" placeholder="2026 or 2026-05"
+                      style="width: 140px;" />
+          <label value="Language" style="min-width: 70px; margin-left: 12px;" />
+          <html:select id="manual-language" style="width: 100px;" />
+        </hbox>
+        <hbox align="center" style="margin-bottom: 4px;">
+          <label value="卷数：" style="min-width: 80px;" />
+          <html:input type="number" id="manual-volume-count" min="1" value="1"
+                      style="width: 80px;" />
+          <html:span style="margin-left: 8px; color: gray; font-size: 12px;">若不选择文件目录，需指定卷数</html:span>
+        </hbox>
+      </vbox>
+
+      <hbox align="center" style="margin-bottom: 8px;">
+        <label value="文件目录：" style="min-width: 80px;" />
+        <html:input type="text" id="file-dir" style="flex: 1;" readonly="true"
+                    placeholder="（可选）不选择则仅创建书目条目" />
+        <button id="btn-browse" label="浏览..." />
+      </hbox>
+
+      <hbox>
+        <spacer flex="1" />
+        <button id="btn-fetch" label="获取并预览" />
+      </hbox>
+    </groupbox>
+
+    <!-- 匹配结果表格 -->
+    <html:div id="volume-list" style="flex: 1; overflow-y: auto; max-height: 350px; border: 1px solid #ccc; margin-top: 10px; display: none;">
+      <!-- 动态填充 -->
+    </html:div>
+
+    <!-- 底部按钮 -->
+    <hbox style="margin-top: 10px;" align="center">
+      <html:span id="volume-summary" style="color: gray; font-size: 12px;"></html:span>
+      <spacer flex="1" />
+      <button id="btn-import-volumes" label="批量导入" default="true" disabled="true" />
+      <button id="btn-close" label="关闭" />
+    </hbox>
+  </vbox>
+</window>
